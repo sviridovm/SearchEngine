@@ -1,5 +1,4 @@
 #pragma once
-#include <cf/searchstring.h>
 #include <cf/ParsedUrl.h>
 #include <cmath>
 
@@ -56,9 +55,8 @@ class StaticRanker {
         // rankScore += urlLengthWeight * url.urlName.length(); // Length of the URL
         rankScore += getTopLevelDomain(url); // Weight based on the top-level domain
 
-        rankScore -= (log(url.Path.charcount('/')) / 2);
-
-        //rankScore -= log(url.urlName.length());
+        const auto count = std::count(url.Path.begin(), url.Path.end(), '/');
+        rankScore -= (log(count) / 2);
                 
 
         return rankScore;

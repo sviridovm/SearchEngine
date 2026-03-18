@@ -12,7 +12,6 @@
 // #include <cf/vec.h>
 #include <cf/crypto.h>
 
-// #include "../frontier/ReaderWriterLock.h"
 
 #include <cf/threading/cfmutex.h>
 #include <cf/threading/cfguard.h>

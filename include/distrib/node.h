@@ -6,15 +6,19 @@
 
 #include "../frontier/BloomFilter.h"
 #include "../frontier/frontier.h"
-#include "../index/index.h"
-#include "../Crawler/crawler.h"
 
-#include <cf/vec.h>
-#include <cf/searchstring.h>
+
+#include <frontier/BloomFilter.h>
+#include <frontier/frontier.h>
+#include <index/index.h>
+#include <crawler/crawler.h>
+
+
 #include <cf/ThreadSafeQueue.h>
 
 #include <chrono>
 #include <fstream>
+#include <vector>
 #define timeNow() std::chrono::high_resolution_clock::now()
 #define duration(a) std::chrono::duration_cast<std::chrono::seconds>(a).count()
 using TimeVar = std::chrono::high_resolution_clock::time_point;
@@ -22,7 +26,7 @@ using TimeVar = std::chrono::high_resolution_clock::time_point;
 
 struct crawlerResults {
     ParsedUrl url;
-    vector<char> buffer;
+    std::vector<char> buffer;
     size_t pageSize;
     
     crawlerResults()=default;

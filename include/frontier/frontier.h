@@ -9,10 +9,13 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <atomic>
-#include "../distrib/URLForwarder.h"
-#include "../distrib/URLReceiver.h"
+
+#include <distrib/URLReceiver.h>
+#include <distrib/URLForwarder.h>
+
+
 #include <memory>
-#include "../parser/HtmlParser.h"
+#include <parser/HtmlParser.h>
 #include <atomic>
 #include <fstream>
 #include <unordered_map>

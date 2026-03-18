@@ -8,7 +8,6 @@
 
 
 #include <cf/ParsedUrl.h>
-#include <cf/searchstring.h>
 
 
 const size_t BUFFER_SIZE = 10000000;

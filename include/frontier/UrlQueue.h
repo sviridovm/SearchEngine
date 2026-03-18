@@ -3,7 +3,7 @@
 #include <queue>
 
 #include <vector>
-#include "../ranker/StaticRanker.h"
+#include <static_ranker/StaticRanker.h>
 
 
 #include <cf/ParsedUrl.h>

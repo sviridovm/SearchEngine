@@ -1,12 +1,7 @@
-// HtmlParser.h
-// Nicole Hamilton, nham@umich.edu
-
 #pragma once
 
 #include "HtmlTags.h"
-#include <cf/searchstring.h>
 #include <cf/ParsedUrl.h>
-#include <cf/vec.h>
 
 
 // This is a simple HTML parser class.  Given a text buffer containing

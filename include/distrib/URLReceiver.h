@@ -4,9 +4,6 @@
 #include <cstddef>
 #include "pthread.h"
 #include <iostream>
-
-
-#include <cf/searchstring.h>
 #include <cf/server/tcpserver.h>
 
 class ThreadSafeFrontier;

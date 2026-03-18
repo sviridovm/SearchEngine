@@ -3,13 +3,9 @@
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 #include <utility>
-// #include "../utils/searchstring.h"
-#include <cf/searchstring.h>
-
 #include <cassert>
-
 #include "../frontier/ReaderWriterLock.h"
-
+#include <string>
 
 
 class Crypto {
@@ -24,7 +20,7 @@ class Crypto {
     }
 
 
-        std::pair<uint64_t, uint64_t> doubleHash(const string &datum) {
+        std::pair<uint64_t, uint64_t> doubleHash(const std::string &datum) {
             
             WithWriteLock l(lock);
             
@@ -56,7 +52,7 @@ class Crypto {
 
 
 
-        size_t hashMod(const string& datum, size_t size) {
+        size_t hashMod(const std::string& datum, size_t size) {
 
             WithWriteLock l(lock);
 

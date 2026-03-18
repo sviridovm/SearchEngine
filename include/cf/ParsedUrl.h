@@ -1,9 +1,7 @@
 #pragma once
+#include <string>
 
-
-#include <cf/searchstring.h>
-
-
+using std::string;
 class ParsedUrl {
     public:
         string urlName;
@@ -29,7 +27,7 @@ class ParsedUrl {
                 pos = colonPos + 1;
     
                 // Skip "://" if present
-                if (*url.at(pos) == '/' && *url.at(pos+1) == '/') {
+                if (url.at(pos) == '/' && url.at(pos+1) == '/') {
                     pos += 2;
                 }
     
@@ -46,11 +44,9 @@ class ParsedUrl {
                         domainstart--;
 
                 Domain = Host.substr(domainstart + 1);
-
-
     
                 // Extract Port if present
-                if (*url.at(pos) == ':') {
+                if (url.at(pos) == ':') {
                     pos++;
                     int portEnd = url.find(slash, pos);
                     Port = url.substr(pos, portEnd - pos);

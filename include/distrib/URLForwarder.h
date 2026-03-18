@@ -1,11 +1,8 @@
 #pragma once
 
-// #include "../utils/vector.h"
 
-#include <cf/vec.h>
 #include <cf/crypto.h>
-
-#include "../frontier/BloomFilter.h"
+#include <frontier/BloomFilter.h>
 
 #include <cassert>
 

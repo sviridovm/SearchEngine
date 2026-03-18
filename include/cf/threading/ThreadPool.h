@@ -1,7 +1,8 @@
+#pragma once
+
+
 #include <pthread.h>
 #include <queue>
-#include <cf/vec.h>
-#pragma once
 
 
 #define THREAD_POOL_SIZE 10
