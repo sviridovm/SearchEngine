@@ -2,19 +2,13 @@
 
 #include <atomic>
 #include <csignal>
-#include <cf/threading/ThreadPool.h>
+#include "cf/threading/ThreadPool.h"
+#include "distrib/URLReceiver.h"
+#include "frontier/frontier.h"
 
-#include "../frontier/BloomFilter.h"
-#include "../frontier/frontier.h"
-
-
-#include <frontier/BloomFilter.h>
-#include <frontier/frontier.h>
-#include <index/index.h>
-#include <crawler/crawler.h>
-
-
-#include <cf/ThreadSafeQueue.h>
+#include "index/index.h"
+#include "crawler/crawler.hpp"
+#include "cf/ThreadSafeQueue.h"
 
 #include <chrono>
 #include <fstream>
@@ -29,12 +23,12 @@ struct crawlerResults {
     std::vector<char> buffer;
     size_t pageSize;
     
-    crawlerResults()=default;
+    crawlerResults() = delete;
     
-    crawlerResults(const ParsedUrl& u, const char * v, size_t p) 
-    : url(u), pageSize(p) {
-        buffer.reserve(p);
-        for (int i = 0; i < p; ++i)
+    crawlerResults(const ParsedUrl& u, const char * v, size_t page_size) 
+    : url(u), pageSize(page_size) {
+        buffer.reserve(page_size);
+        for (size_t i = 0; i < page_size; ++i)
             buffer.push_back(v[i]);
     }
     
@@ -76,7 +70,7 @@ class Node {
         }
     };
 
-    friend class Stats;
+    friend struct Stats;
 
     Stats stats;
 

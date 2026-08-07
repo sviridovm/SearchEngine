@@ -1,8 +1,11 @@
 // crawler.cpp
 
-#include "crawler.h"
+#include "crawler/crawler.hpp"
+#include <iostream>
 #include <memory>
+#include <string>
 
+using std::string;
 
 
 
@@ -46,11 +49,10 @@ void Connection::freeSSL() {
    hostname = "";
 }
 
-void Crawler::crawl ( ParsedUrl url, char *buffer, size_t &pageSize)
-   {
+void Crawler::crawl ( ParsedUrl url, char *buffer, size_t &pageSize) {
 
    // Crawler c = Crawler();
-   std::unique_ptr<Connection> c = nullptr;
+   std::unique_ptr<Connection> conn = nullptr;
 
 
    int bytes;
@@ -59,15 +61,14 @@ void Crawler::crawl ( ParsedUrl url, char *buffer, size_t &pageSize)
    const char* route = url.Host.c_str();
 
    try {
-      c = std::make_unique<Connection>(globalCtx, url.Host);      
+      conn = std::make_unique<Connection>(globalCtx, url.Host);      
    } catch (const std::runtime_error &e) {
       std::cerr << "url: | " << url.urlName << std::endl;
       throw;
    }
-   // 
 
    // GET Message construction
-   if (*path.at(0) != '/')
+   if (path.at(0) != '/')
       path = string("/") + path;
    
    string getMessage =
@@ -78,15 +79,15 @@ void Crawler::crawl ( ParsedUrl url, char *buffer, size_t &pageSize)
       "Accept-Encoding: identity\r\n"
       "Connection: close\r\n\r\n";
 
-   if (SSL_write( c->ssl, getMessage.c_str(), getMessage.length() ) <= 0 ) {
+   if (SSL_write( conn->ssl, getMessage.c_str(), getMessage.length() ) <= 0 ) {
       std::cerr << "Failed to write over SSL" << std::endl;
-      c->freeSSL();
+      conn->freeSSL();
       throw std::runtime_error("Failed to write over SSL.");
    }
    string nstr = string(url.urlName + "\n");
    memcpy(buffer, nstr.c_str(), nstr.length());
    pageSize = nstr.length();
-   while ((bytes = SSL_read(c->ssl, buffer + pageSize, 64)) > 0 
+   while ((bytes = SSL_read(conn->ssl, buffer + pageSize, 64)) > 0 
            && pageSize < BUFFER_SIZE - 128) {
       pageSize += bytes;
    }

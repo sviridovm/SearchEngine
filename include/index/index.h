@@ -2,29 +2,23 @@
 #pragma once
 
 
+#include <cstdint>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <cmath>
-#include <bitset>
 #include <iostream>
 #include <cstring>
-#include <filesystem>
 #include <cassert>
-
-#include <cf/Utf8.h>
-#include <cf/HashTable.h>
+#include <vector>
 
 
-#include <parser/HtmlParser.h>
-using std::vector;
-using std::string;
+#include "cf/HashTable.h"
+#include "parser/HtmlParser.hpp"
+#include "frontier/ReaderWriterLock.h"
 
 
-#include "../frontier/ReaderWriterLock.h"
-
-#include <index/stemmer/stemmer.h>
 
 const int MAX_INDEX_SIZE = 800000; // ? 8mb ?
 const int MAX_DOCS = 5000;
@@ -174,17 +168,17 @@ public:
    }
 
    // Return list's appearances
-   const size_t getUseCount() const {
+   size_t getUseCount() const {
       return list.size();
    }
 
    // Return list's document appearances 
-   const size_t getDocCount() const {
+   size_t getDocCount() const {
       return documentCount;
    }
 
    // Return list's document appearances 
-   const char getType() const {
+   char getType() const {
       switch (type) {
          case Token::EoD:
                return 'e';
@@ -202,12 +196,12 @@ public:
    }
 
    // Get ptr to actual post list
-   const vector<Post> *getList() const {
+   const std::vector<Post> *getList() const {
       return &list;
    }
 
    // Get ptr to seek table
-   const vector<std::pair<size_t, size_t>> *getSeekTable() const {
+   const std::vector<std::pair<size_t, size_t>> *getSeekTable() const {
       return &SeekTable;
    }
 
@@ -271,13 +265,13 @@ private:
     //Type-specific data
 
     //Posts
-   vector<Post> list;
+   std::vector<Post> list;
 
     //Current magnitude of the SeekIndex for this PostingList
    uint8_t seekIndex = 0;
     //Seek list
     // Array of size_t pairs -- the first is the index of the post in list, the second is its real location
-   vector<std::pair<size_t, size_t>> SeekTable;
+   std::vector<std::pair<size_t, size_t>> SeekTable;
    void UpdateSeek( size_t index, const size_t location ) {
       if (location >= (1 << seekIndex)) { // Is location >= 0x1, 0x10, 0x100, etc
          SeekTable.push_back(std::make_pair(index, location));
@@ -296,16 +290,16 @@ public:
    size_t WordsInIndex = 0, 
    DocumentsInIndex = 0;
 
-   vector<string> documents;
+   std::vector<std::string> documents;
    
 
    Index() {}
 
-   const vector<string> *getDocuments() const {
+   const std::vector<std::string> *getDocuments() const {
       return &documents;
    }
 
-   const HashTable<string, PostingList> *getDict() const {
+   const HashTable<std::string, PostingList> *getDict() const {
       return &dict;
    }
 
@@ -314,21 +308,22 @@ public:
    }
 
    // add one posting list to the dictionary
-   void setPostingList(const string & str, const PostingList & pl) {
+   void setPostingList(const std::string & str, const PostingList & pl) {
       dict.Find(str, pl);
    }
 
 private:
 
-   HashTable<string, PostingList> dict;
+   HashTable<std::string, PostingList> dict;
 
-   string titleMarker = string("@");
-   string anchorMarker = string("$");
-   string selfRefUrlMarker = string("#1");
-   string otherRefUrlMarker = string("#0");
-   string selfUrlMarker = string("##");
-   string eodMarker = string("%");
-   string headMarker = string("<");
+   static constexpr auto titleMarker = std::string_view("@");
+   static constexpr auto headMarker = std::string_view("<");
+   static constexpr auto anchorMarker = std::string_view("$");
+   static constexpr auto selfRefUrlMarker = std::string_view("#1");
+   static constexpr auto otherRefUrlMarker = std::string_view("#0");
+   static constexpr auto selfUrlMarker = std::string_view("##");
+   static constexpr auto eodMarker = std::string_view("%");
+
 
 };
 
@@ -342,7 +337,7 @@ public:
    IndexHandler( const char * foldername );
    void UpdateIH();
 
-   string &getFilename() {
+   std::string &getFilename() {
       return fileString;
    }
 
@@ -353,7 +348,7 @@ public:
 protected:
    ReaderWriterLock rw_lock;
 
-   string fileString;
+   std::string fileString;
    int chunkID;
 
    const char * folder = nullptr;
@@ -362,7 +357,7 @@ protected:
 
    char space = ' ';
    char endl = '\n';
-   string EoF = "%";
+   std::string EoF = "%";
 };
 
 

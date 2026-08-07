@@ -1,6 +1,6 @@
-#include "compiler.h"
-#include "../isr/isrHandler.h"
-#include "../index/stemmer/stemmer.h"
+#include "queryCompiler/compiler.h"
+#include "isr/isrHandler.h"
+#include "index/stemmer/stemmer.h"
 #include <stdexcept>
 //#include <iostream>
 
@@ -194,9 +194,9 @@ ISR* QueryParser::wordC()
       //   ISRWord* word = handler.OpenISRWord(w.c_str());
       //   string titleStr(string("@") + w);
       //   ISRWord* title = handler.OpenISRWord(titleStr.c_str());
-         string w = stemWord( tokenStream.CurrentTokenString() );
-         ISRWord* word = handler.OpenISRWord(w.c_str());
-         string titleStr(string("@") + w);
+         string stem_word = stemWord( tokenStream.CurrentTokenString() );
+         ISRWord* word = handler.OpenISRWord(stem_word.c_str());
+         string titleStr(string("@") + stem_word);
          ISRWord* title = handler.OpenISRWord(titleStr.c_str());
         if (word != nullptr)
             {
@@ -215,9 +215,9 @@ ISR* QueryParser::wordC()
             // string w = standardize(tokenStream.CurrentTokenString());
             // if (StopWords::isStopword(w))
             //     return nullptr;
-            w = stemWord(tokenStream.CurrentTokenString());
-            ISRWord* word = handler.OpenISRWord(w.c_str());
-            string titleStr(string("@") + w);
+            stem_word = stemWord(tokenStream.CurrentTokenString());
+            ISRWord* word = handler.OpenISRWord(stem_word.c_str());
+            string titleStr(string("@") + stem_word);
             ISRWord* title = handler.OpenISRWord(titleStr.c_str());
             if (word != nullptr)
                 {

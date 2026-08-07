@@ -1,15 +1,13 @@
 #pragma once
 #include <string>
-
-using std::string;
 class ParsedUrl {
     public:
-        string urlName;
-        string Service, Host, Port, Path, Domain;
+        std::string urlName;
+        std::string Service, Host, Port, Path, Domain;
     
         ParsedUrl() {}
 
-        ParsedUrl(const string& url) {
+        ParsedUrl(const std::string& url) {
             urlName = url;
     
             if (url.empty()) {
@@ -33,7 +31,10 @@ class ParsedUrl {
     
                 // Extract Host
                 int hostEnd = url.find(slash, pos);
-                hostEnd == -1 ? hostEnd = url.length() : hostEnd = hostEnd;
+                if (hostEnd == -1) {
+                    hostEnd = url.length();
+                }
+                
                 Host = url.substr(pos, hostEnd - pos);
                 pos += Host.length();
 
@@ -65,11 +66,8 @@ class ParsedUrl {
             }
         }
 
-        string makeRobots() {
-            return Service + string("://") + Host + string("/robots.txt");
+        std::string makeRobots() {
+            return Service + std::string("://") + Host + std::string("/robots.txt");
         }
     
-        ~ParsedUrl() {
-            // No manual memory management required with string
-        }
     };

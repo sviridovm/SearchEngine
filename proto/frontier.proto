@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package frontier;
+
+service Frontier {
+    rpc GetURLs(URLRequest) returns (URLResponse);
+    rpc SubmitURLs(URLBatch) returns (SubmitResponse);
+}
+
+message URLRequest {
+    int32 count = 1;
+    string node_id = 2;
+}
+
+message URLResponse {
+    repeated string urls = 1;
+}
+
+message URLBatch {
+    repeated string urls = 1;
+}
+
+message SubmitResponse {
+    int32 accepted = 1;
+}
+

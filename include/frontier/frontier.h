@@ -1,24 +1,23 @@
 #pragma once
 
-#include "BloomFilter.h"
-
+#include "BloomFilter.hpp"
 #include "ReaderWriterLock.h"
+#include "frontier/UrlQueue.hpp"
+
+
 #include <pthread.h>
-#include "UrlQueue.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <atomic>
 
-#include <distrib/URLReceiver.h>
-#include <distrib/URLForwarder.h>
+#include "distrib/URLReceiver.h"
+#include "distrib/URLForwarder.h"
 
 
-#include <memory>
-#include <parser/HtmlParser.h>
+#include "parser/HtmlParser.hpp"
 #include <atomic>
 #include <fstream>
-#include <unordered_map>
 
 const static int MAX_HOST = 300;
 //const static int WRITE_TURNOVER = 500000;
@@ -28,7 +27,7 @@ class ThreadSafeFrontier {
     
     private:
         UrlQueue frontier_queue; 
-        Bloomfilter bloom_filter;
+        BloomFilter bloom_filter;
 
         // pthread_mutex_t lock;
         ReaderWriterLock rw_lock;
@@ -81,7 +80,9 @@ class ThreadSafeFrontier {
         inline bool frontierfilter(const string &s) {
             if (!s.contains("https"))
                 return false;
-            for (auto &i : fblacklist) {
+
+
+            for (const auto &i : fblacklist) {
                 if (s.contains(i))
                     return false;
             }
@@ -109,13 +110,13 @@ class ThreadSafeFrontier {
 
     public:
 
-        ThreadSafeFrontier() : bloom_filter(false), returnEmpty(false)
+        ThreadSafeFrontier() : bloom_filter(), returnEmpty(false)
         {
             // pthread_mutex_init(&lock, NULL);
         }
 
         ThreadSafeFrontier(const unsigned int numNodes, const unsigned int id) : 
-            bloom_filter(true), 
+            bloom_filter(), 
             returnEmpty(false),
             numNodes(numNodes),
             id(id),
@@ -124,7 +125,7 @@ class ThreadSafeFrontier {
             
         }
 
-        int writeFrontier() {
+        int writeFrontier() const {
             WithWriteLock wl(rw_lock); 
             std::cout << "writing frontier" << std::endl;
 
@@ -144,9 +145,9 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             int count = 0;
-            std::vector<string> *urls = frontier_queue.getUrls();
+            auto urls = frontier_queue.getUrls();
 
-            for (int i = 0; i < urls->size(); i++) {
+            for (size_t i = 0; i < urls.size(); i++) {
                 string s = frontier_queue.at(i);
                 s += endl;
                 write(fd, s.c_str(), s.length());       
@@ -208,7 +209,7 @@ class ThreadSafeFrontier {
             }
         }
 
-        void insert( const vector<string> &links ) {
+        void insert( const std::vector<string> &links ) {
             {
                 WithWriteLock wl(rw_lock); 
                 for (const auto &link : links) {
@@ -218,7 +219,7 @@ class ThreadSafeFrontier {
             }
         }
 
-        void insert( const vector<Link> &links ) {
+        void insert( const std::vector<Link> &links ) {
             {
                 WithWriteLock wl(rw_lock); 
                 for (const auto &link : links) {

@@ -1,13 +1,14 @@
 #pragma once
 
-#include <cf/searchstring.h>
-#include <cf/vec.h>
+#include <string>
 #include "tokentype.h"
 
+
+using std::string;
 class TokenStream {
     public:
     TokenStream(char* input) : input(input), currentToken(nullptr), currentTokenString("") {}
-    TokenStream(string& input) : input(input.c_str()), currentToken(nullptr), currentTokenString("") {}
+    TokenStream(string& input) : input(input), currentToken(nullptr), currentTokenString("") {}
     //take next token -- removes it from the stream
     QueryToken* TakeToken( );
     //returns current token
@@ -19,11 +20,11 @@ class TokenStream {
         return currentTokenString;
     }
     //@returns: the query string
-    char* getQuery() {
+    string getQuery() {
         return input;
     }
     //@param: the query string
-    void setQuery(char* query) {
+    void setQuery(string& query) {
         input = query;
     }
     //matches token, takes if matched
@@ -42,8 +43,8 @@ class TokenStream {
     TokenType ReadTokenType();
     //matches token
     private:
-    //requires input to be a c-string, null terminated
-    char* input;
+
+    std::string input;
     //not the token at input, but the token that was taken last
     QueryToken* currentToken;
     //undefined behavior if currentToken is not a word

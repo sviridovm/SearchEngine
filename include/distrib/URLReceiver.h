@@ -2,9 +2,10 @@
 
 #include <atomic>
 #include <cstddef>
-#include "pthread.h"
-#include <iostream>
-#include <cf/server/tcpserver.h>
+#include <string>
+
+
+#include "cf/server/tcpserver.h"
 
 class ThreadSafeFrontier;
 
@@ -25,7 +26,7 @@ class UrlReceiver {
     TCPServer server;
 
 
-    string parseUrls(const char *buffer);
+    std::string parseUrls(const char *buffer);
 
     void listener();
     

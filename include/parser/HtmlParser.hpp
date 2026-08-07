@@ -1,7 +1,8 @@
 #pragma once
 
-#include "HtmlTags.h"
-#include <cf/ParsedUrl.h>
+#include "cf/ParsedUrl.hpp"
+#include <string>
+#include <vector>
 
 
 // This is a simple HTML parser class.  Given a text buffer containing
@@ -68,12 +69,12 @@
 class Link
    {
    public:
-      string URL;
-      vector< string > anchorText;
+      std::string URL;
+      std::vector< std::string > anchorText;
 
       Link() = default;
 
-      Link( string URL ) : URL( URL )
+      Link( std::string URL ) : URL( URL )
          {
          }
    };
@@ -82,9 +83,9 @@ class Link
 class HtmlParser
    {
    public:
-      vector< string > bodyWords, titleWords, headWords;
-      vector< Link > links;
-      string base;
+      std::vector< std::string > bodyWords, titleWords, headWords;
+      std::vector< Link > links;
+      std::string base;
       ParsedUrl pURL;
       size_t count = 0;
 
@@ -95,14 +96,14 @@ class HtmlParser
       HtmlParser(const char *buffer, const size_t length);
 
       // Special constructor for robots.txt
-      HtmlParser(const char *buffer, const size_t length, const string &basename );
+      HtmlParser(const char *buffer, const size_t length, const std::string &basename );
 
       HtmlParser () {};
       
    private:
-      void appendWord(const string &word, vector< string > &vec, bool append);
-      void appendWord(const char * ptr, long len, vector< string > &vec, const char * end);
+      void appendWord(const std::string &word, std::vector< std::string > &vec, bool append);
+      void appendWord(const char * ptr, long len, std::vector< std::string > &vec, const char * end);
       bool appendLink(const Link &link);
-      string complete_link(string link, string base_url);
+      std::string complete_link(std::string link, std::string base_url);
       
    };

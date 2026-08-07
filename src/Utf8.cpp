@@ -1,10 +1,9 @@
 // Utf8.cpp
 
 // This file implements Utf8 library functions.
-#include "Utf8.h"
+#include "cf/Utf8.h"
+#include <stdexcept>
 
-
-#include <iostream>
 size_t SizeOfUtf8( Unicode c )
    {
    if ( c <= 0x7F )
@@ -84,7 +83,7 @@ const Utf8 *NextUtf8( const Utf8 *p, const Utf8 *bound )
    if ( indicatedLength == 1 )
       return p + 1;  
 
-   for ( int i = 1; i < indicatedLength; i ++ )
+   for ( size_t i = 1; i < indicatedLength; i ++ )
       {
       // invalid continuation byte
       if ( ( *( p + i ) & 0xC0 ) != 0x80 )
@@ -98,7 +97,7 @@ const Utf8 *NextUtf8( const Utf8 *p, const Utf8 *bound )
    }
 
 const Utf8 *PreviousUtf8( const Utf8 *p )
-   {
+{
    p --;  
 
    // while continuation byte
@@ -106,10 +105,10 @@ const Utf8 *PreviousUtf8( const Utf8 *p )
       p --;  
 
    return p;  
-   }
+}
 
 Utf8 *WriteUtf8( Utf8 *p, Unicode c )
-   {
+{
    // one byte utf8
    if ( c <= 0x7F )
       {
@@ -125,13 +124,16 @@ Utf8 *WriteUtf8( Utf8 *p, Unicode c )
       }
    // three bytes
    else if ( c <= 0xFFFF )
-      {
+   {
       *p = ( c >> 12 ) | 0xE0;  
       *( p + 1 ) = ( ( c >> 6 ) & 0x3F ) | 0x80;  
       *( p + 2 ) = ( c & 0x3F ) | 0x80;  
       return p + 3;  
-      }
    }
+   
+   // ????
+   throw std::invalid_argument("Invalid Unicode character for UTF-8 encoding");
+}
 
 
 // Not part of hw
@@ -156,7 +158,7 @@ size_t SizeOfCustomUtf8( const size_t &c )
    }
 
 // write c into Utf8
-void WriteCustomUtf8( Utf8 *p, const size_t &c, const size_t &length )
+void WriteCustomUtf8( Utf8 *p, size_t c,  size_t length )
    {
 
    if( length == 0 || length > 6 )
@@ -170,7 +172,7 @@ void WriteCustomUtf8( Utf8 *p, const size_t &c, const size_t &length )
    if ( length == 1 )
       *p = c;  
    else {
-      for ( int i = 1; i < length; i ++ )
+      for ( size_t i = 1; i < length; i ++ )
          *( p + i ) = ( ( c >> ( 6 * ( length - i - 1 ) ) ) & 0x3F ) | 0x80;  
    }
 
@@ -200,7 +202,7 @@ size_t GetCustomUtf8( const Utf8 *p ) {
 
    result = result << ( 6 * ( indicatedLength - 1 ) );  
 
-   for ( int i = 1; i < indicatedLength; i ++ )
+   for ( size_t i = 1; i < indicatedLength; i ++ )
       result = result | ( ( *( p + i ) & 0x3F ) << ( 6 * ( indicatedLength - i - 1 ) ) );  
 
    return result;  

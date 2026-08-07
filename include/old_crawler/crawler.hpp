@@ -1,16 +1,17 @@
+#pragma once
+
+#include <string>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#include <iostream>
+
+#include "cf/ParsedUrl.hpp"
 
 
-#include <cf/ParsedUrl.h>
-
-
-const size_t BUFFER_SIZE = 10000000;
+static constexpr size_t BUFFER_SIZE = 10000000;
 
 
 
@@ -33,12 +34,12 @@ class Connection {
     public: 
 
         Connection();
-        Connection(SSL_CTX * ctx, const string hostname);
+        Connection(SSL_CTX * ctx, const std::string hostname);
         void freeSSL();
         ~Connection();
 
     private: 
-        string hostname;
+        std::string hostname;
         SSL *ssl;
         int sd;
         struct addrinfo *address, hints;

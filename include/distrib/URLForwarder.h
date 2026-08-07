@@ -2,18 +2,22 @@
 
 
 #include <cf/crypto.h>
-#include <frontier/BloomFilter.h>
+#include "frontier/BloomFilter.hpp"
 
 #include <cassert>
 
+#include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
 #include <cstdlib>
 #include <cstring>
+#include <unistd.h>
 
-#include <cf/threading/ThreadPool.h>
+#include "cf/threading/ThreadPool.h"
+#include "queryCompiler/tokenstream.h"
+#include <vector>
 
 class UrlForwarder {
     private:
@@ -23,17 +27,17 @@ class UrlForwarder {
         size_t numNodes;
         size_t selfId;
         
-        vector<string> ips;
+        std::vector<std::string> ips;
 
-        vector<Bloomfilter> bloomFilters;
-        vector<vector<string>> urlQueues;
+        std::vector<BloomFilter> bloomFilters;
+        std::vector<std::vector<std::string>> urlQueues;
         Crypto crypto;
 
 
         
         ThreadPool tPool;
 
-        inline void queueSend(const string& url, const size_t id) {
+        inline void queueSend(const std::string& url, const size_t id) {
             // send url to node id
 
             assert (id < numNodes);
@@ -67,16 +71,16 @@ class UrlForwarder {
 
         struct SendBatchArgs {
             size_t id;
-            vector<string> urls;
-            string ip;
+            std::vector<std::string> urls;
+            std::string ip;
         };
 
 
         static void sendBatch(void * arg) {
             auto* args = static_cast<SendBatchArgs*>(arg);
             size_t id = args->id;
-            string& ip = args->ip;
-            vector<string>& urls = args->urls;
+            std::string& ip = args->ip;
+            // std::vector<std::string>& urls = args->urls;
 
             const uint16_t port = 8080;
 
@@ -98,7 +102,7 @@ class UrlForwarder {
 
 
              // Serialize vector<string> into a flat buffer
-            string payload;
+            std::string payload;
             for (const auto& url : args->urls) {
                 payload.append(url);
                 payload.push_back('\n');
@@ -130,12 +134,12 @@ class UrlForwarder {
     UrlForwarder(size_t numNodes, size_t id) : numNodes(numNodes), selfId(id) {
         
 
-        urlQueues.resize(numNodes, vector<string>());
+        urlQueues.resize(numNodes, std::vector<std::string>());
 
         // init bloom filters
         bloomFilters.reserve(numNodes); 
         for (size_t i = 0; i < numNodes; i++) {
-            bloomFilters.emplace_back(true);
+            bloomFilters.emplace_back();
         }
 
         
@@ -143,7 +147,7 @@ class UrlForwarder {
         ips.reserve(numNodes);
         for (size_t i = 0; i < numNodes; i++)
         {
-            const string envVar = string("NODE_IP") + string(std::to_string(i).c_str());
+            const std::string envVar = std::string("NODE_IP") + std::string(std::to_string(i).c_str());
         
             ips.emplace_back(std::getenv(envVar.c_str()));
         }
@@ -152,7 +156,7 @@ class UrlForwarder {
     }
 
     // TODO: add dist from seedlist
-    inline std::pair<int, bool> addUrl(const string& url) {
+    inline std::pair<unsigned int, bool> addUrl(const string& url) {
         const unsigned int urlOwner = crypto.hashMod(url, numNodes);
         auto& bloomFilter = bloomFilters[urlOwner];
 
@@ -166,7 +170,7 @@ class UrlForwarder {
     }
 
 
-    inline Bloomfilter& getBloomFilter(const size_t id) {
+    inline BloomFilter& getBloomFilter(const size_t id) {
         return bloomFilters[id];
     }
 };

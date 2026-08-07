@@ -1,6 +1,7 @@
 //stemmer.h
 #pragma once
-#include "utf8proc/utf8proc.h"
+#include <string>
+#include <vector>
 
 
 //takes: UTF-8 encoded string with whatever, in unicode

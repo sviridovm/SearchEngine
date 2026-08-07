@@ -1,6 +1,8 @@
 #pragma once
-#include <cf/ParsedUrl.h>
+#include "cf/ParsedUrl.hpp"
 #include <cmath>
+#include <string>
+#include <algorithm>
 
 
 enum TopLevelDomains {
@@ -27,7 +29,7 @@ class StaticRanker {
     static float getTopLevelDomain(const ParsedUrl& url) {
         if (url.Host.empty()) return COM; // Default to COM if Host is empty
 
-        const string& tld = url.Domain;
+        const std::string& tld = url.Domain;
 
         TopLevelDomains tldEnum = COM; // Default to COM
 
@@ -62,7 +64,7 @@ class StaticRanker {
         return rankScore;
     }
     
-    bool operator() (const string &url1, const string &url2) {
+    bool operator() (const std::string &url1, const std::string &url2) {
         return rank(ParsedUrl(url1)) > rank(ParsedUrl(url2));
     }
 

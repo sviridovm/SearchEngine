@@ -1,7 +1,9 @@
-#include "node.h"
-#include <chrono>
-#include <thread>
-using namespace std::this_thread; // sleep_for, sleep_until
+#include "distrib/node.h"
+#include "crawler/crawler.hpp"
+#include <memory>
+
+
+// using namespace std::this_thread; // sleep_for, sleep_until
 using namespace std::chrono; // nanoseconds, system_clock, seconds
 
 
@@ -110,7 +112,7 @@ void Node::shutdown(bool writeFrontier) {
 
 
 void Node::crawl() {
-    Crawler alpacino;
+    Crawler crawler;
 
     while (keepRunning) {
 
@@ -123,14 +125,14 @@ void Node::crawl() {
             break;
         }
         //TODO uncomment
-        crawlRobots(url.makeRobots(), url.Service + string("://") + url.Host, alpacino);
+        crawlRobots(url.makeRobots(), url.Service + string("://") + url.Host, crawler);
     
         auto buffer = std::make_unique<char[]>(BUFFER_SIZE);
     
         size_t pageSize = 0;
     
         try {
-            alpacino.crawl(url, buffer.get(), pageSize);
+            crawler.crawl(url, buffer.get(), pageSize);
             crawlerResults cResult(url, buffer.get(), pageSize);
             crawlResultsQueue.put(std::move(cResult), false);
         } catch (const std::runtime_error &e) {

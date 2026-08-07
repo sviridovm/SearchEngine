@@ -1,23 +1,22 @@
 #pragma once
 
 #include <queue>
-
+#include <stdexcept>
+#include <string>
 #include <vector>
-#include <static_ranker/StaticRanker.h>
-
-
-#include <cf/ParsedUrl.h>
+#include "static_ranker/StaticRanker.h"
+#include "cf/ParsedUrl.hpp"
 
 
 // Data Structure that abstracts random K access to a queue of URLs
 class UrlQueue {
     
     private:
-        std::vector<string> urls;
+        std::vector<std::string> urls;
 
         //? CAN THIS BE A VECTOR ?
         //* YUH BECAUSE ORDERING DOESN:T MATTER IF ITS ALREADY IIN THE POOL
-        std::priority_queue<string, std::vector<string>, StaticRanker> urlPool;
+        std::priority_queue<std::string, std::vector<std::string>, StaticRanker> urlPool;
 
         
         static constexpr size_t MAX_POOL_CANDIDATES = 20000;
@@ -34,8 +33,8 @@ class UrlQueue {
 
             while (count < N) {
                 const unsigned int randomIndex = rand() % urls.size();
-                const string& selectedUrl = urls[randomIndex];
-                string curr = ParsedUrl(selectedUrl).Host;
+                const std::string& selectedUrl = urls[randomIndex];
+                std::string curr = ParsedUrl(selectedUrl).Host;
                
 
                 count++;
@@ -50,9 +49,9 @@ class UrlQueue {
 
             }
 
-            for (int i = 0; i < (N - k); i++) {
-                string top = urlPool.top();
-                urls.push_back(top);
+            for (size_t i = 0; i < (N - k); i++) {
+                std::string top = urlPool.top();
+                urls.emplace_back(top);
                 urlPool.pop();
             }
                 
@@ -63,17 +62,17 @@ class UrlQueue {
 
     public:
 
-        std::vector<string> *getUrls() {
-            return &urls;
+        const std::vector<std::string>& getUrls() const{
+            return urls;
         }
 
         UrlQueue() = default;
 
-        void addUrl(const string &url) {
+        void addUrl(const std::string &url) {
             urls.push_back(url);
         }
 
-        string getNextUrl() {
+        std::string getNextUrl() {
 
             if (urlPool.empty() and urls.empty()) {
                 throw std::runtime_error("No URLs available");
@@ -83,7 +82,7 @@ class UrlQueue {
                 fillUrlPool();
             }
 
-            string nextUrl, curr;
+            std::string nextUrl, curr;
             nextUrl = urlPool.top();
             urlPool.pop();
             curr = ParsedUrl(nextUrl).Host;
@@ -102,7 +101,7 @@ class UrlQueue {
             return (urls.size() + urlPool.size());
         }
 
-        string &at(int i) {
+        const std::string &at(int i) const {
             return urls[i];
         }
 

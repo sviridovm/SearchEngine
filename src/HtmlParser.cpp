@@ -4,16 +4,20 @@
 // If you don't define the HtmlParser class methods inline in
 // HtmlParser.h, you may do it here.
 
-#include "HtmlParser.h"
-#include <iostream>
+#include "parser/HtmlParser.hpp"
 #include <cstring>
+#include <algorithm>
+#include <array>
+#include <string_view>
+#include <ranges>
+#include <string>
 
-string stops[19] = {
+constexpr auto stop_words = std::to_array<std::string_view>({
    "the", 
    "be", 
    "to",
    "of", 
-   "", 
+   // "", 
    "a",
    "and"
    "an",
@@ -28,33 +32,32 @@ string stops[19] = {
    "of",
    "on",
    "with"
-};
-
-const char * punctuation[23] = {
-   "<",
-   ">",
-   ":",
-   ";",
-   "(",
-   ")",
-   "'",
-   "\"",
-   "\\",
-   "{",
-   "}",
-   "=",
-   ".",
-   ",",
-   "?",
-   "!",
-   "#",
-   "%",
-   "*",
-   "$",
-   "|",
-   "[",
-   "]"
-};
+});
+constexpr auto punctuation = std::to_array<char>({
+   '<',
+   '>',
+   ':',
+   ';',
+   '(',
+   ')',
+   '\'',
+   '\"',
+   '\\',
+   '{',
+   '}',
+   '=',
+   '.',
+   ',',
+   '?',
+   '!',
+   '#',
+   '%',
+   '*',
+   '$',
+   '|',
+   '[',
+   ']'
+});
 
 void increment(const char * p, const char * end, int amt) {
    if (p + amt > end)
@@ -63,14 +66,22 @@ void increment(const char * p, const char * end, int amt) {
       p += amt;
 }
 
-void HtmlParser::appendWord(const string &word,
-                           vector< string > &vec, bool append) {
-   for (auto &i : stops)
-      if (word == i)
-         return;
-   for (int i = 0; i < 20; i++)
-      if (word.contains(punctuation[i]))
-         return;
+void HtmlParser::appendWord(const std::string &word,
+                           std::vector< std::string > &vec, bool append) {
+
+
+   if (!std::ranges::none_of(stop_words, [&](const auto& stop) { 
+      return word == stop; 
+   })) {
+      return;
+   }
+
+   if (!std::ranges::none_of(punctuation, [&](char p) { 
+      return word.find(p) != std::string::npos; 
+   })) {
+      return;
+   }
+
    if (append && !vec.empty()) {
       vec.back() += word;
    } else {
@@ -79,8 +90,12 @@ void HtmlParser::appendWord(const string &word,
 }
 
 bool HtmlParser::appendLink(const Link &link) {
-   if (link.URL.charcount('?') > 0 || link.URL.charcount('#') > 0 || link.URL.charcount('+') > 0
-      || link.URL.size() > 128 || link.URL.charcount('=') > 0)
+   auto contains_qm = std::count(link.URL.begin(), link.URL.end(), '?') > 0 ;
+   auto contains_pound = std::count(link.URL.begin(), link.URL.end(), '#') > 0 ;
+   auto contains_plus = std::count(link.URL.begin(), link.URL.end(), '+') > 0 ;
+   auto contains_equal = std::count(link.URL.begin(), link.URL.end(), '=') > 0 ;
+
+   if (contains_qm || contains_pound || contains_plus || contains_equal || link.URL.size() > 128)
       return false;
    if (link.URL.find("http") != -1 && link.URL.charcount('/') < 5)
       links.push_back(link);
@@ -90,12 +105,12 @@ bool HtmlParser::appendLink(const Link &link) {
 }
 
 void HtmlParser::appendWord(const char * ptr, long len,
-                           vector< string > &vec, const char *end) {
-   string str(ptr, len, end);
+                           std::vector< std::string > &vec, const char *end) {
+   std::string str(ptr, len, end);
    appendWord(str, vec, false);
 }
 
-string HtmlParser::complete_link(string link, string base_url)
+std::string HtmlParser::complete_link(std::string link, std::string base_url)
 {
    if (link.find("http://") == 0 || link.find("https://") == 0) {
       return link;
@@ -107,11 +122,11 @@ string HtmlParser::complete_link(string link, string base_url)
       if (*link.at(0) == '/')
          return base_url + link; 
       else
-         return base_url + string("/") + link; 
+         return base_url + std::string("/") + link; 
    }
 }
 
-HtmlParser::HtmlParser( const char *buffer, const size_t length, const string &baseName )
+HtmlParser::HtmlParser( const char *buffer, const size_t length, const std::string &baseName )
    {
       bool inzone = false;
       const char *p = buffer;
@@ -127,14 +142,14 @@ HtmlParser::HtmlParser( const char *buffer, const size_t length, const string &b
                const char * start = p;
                while (*p != '\n' && p != end)
                   p++;
-               appendWord(baseName + string(start, p - start, end), bodyWords, true);
+               appendWord(baseName + std::string(start, p - start, end), bodyWords, true);
             }
             if (string(p, 10, end) == "Disallow: ") {
                p += 10;
                const char * start = p;
                while (*p != '\n' && p != end)
                   p++;
-               appendWord(baseName + string(start, p - start, end), bodyWords, true);
+               appendWord(baseName + std::string(start, p - start, end), bodyWords, true);
             }
             if (*p == '#')
                break;
@@ -153,8 +168,8 @@ HtmlParser::HtmlParser( const char *buffer, size_t length )
    bool inItalic = false;
    bool inBold = false;
    bool pastHtml = false;
-   string url;  
-   vector< string > curr_anchorText;  
+   std::string url;  
+   std::vector< std::string > curr_anchorText;  
    const char *p = buffer;  
    const char *end = buffer + length - 1; 
 
@@ -165,7 +180,7 @@ HtmlParser::HtmlParser( const char *buffer, size_t length )
    {
       while ( *p != '\n' )
          p++;
-      base = string(buffer, p - buffer, end);
+      base = std::string(buffer, p - buffer, end);
       pURL = ParsedUrl(base);
       p++;
    }
@@ -179,7 +194,7 @@ HtmlParser::HtmlParser( const char *buffer, size_t length )
             size++;
             p++;
          }
-         appendLink(Link(string(s, size, end)));
+         appendLink(Link(std::string(s, size, end)));
          base = "";
          return;
       }
@@ -269,7 +284,7 @@ HtmlParser::HtmlParser( const char *buffer, size_t length )
 
                case DesiredAction::Embed:
                   {
-                  string embed_url = "";  
+                  std::string embed_url = "";  
                   while ( p < end && *p != '>' )
                      {
                      if ( memcmp( p, "src=", 4 ) == 0 && p[ 4 ] == '"' )
@@ -332,7 +347,7 @@ HtmlParser::HtmlParser( const char *buffer, size_t length )
                   break;  
                case DesiredAction::HTML:
                   if (!pastHtml) {
-                     while (string(p, 9, end) != "lang=\"en\"" && string(p, 9, end) != "lang=\"en-" 
+                     while (string(p, 9, end) != "lang=\"en\"" && std::string(p, 9, end) != "lang=\"en-" 
                             && *p != '>' && p != end)
                         p++;
                      if (*p == '>' || p == end) {
@@ -357,7 +372,7 @@ HtmlParser::HtmlParser( const char *buffer, size_t length )
                   const char *start = p - 2;  
                   while ( p < end - 1 && *p != '<' && !isspace( *p ) && !( p[ 0 ] == '/' && p[ 1 ] == '>' ) )
                      p++;  
-                  const string word( start, p - start, end );  
+                  const std::string word( start, p - start, end );  
                   const bool emptyWord = ( p - start ) == 0;  
 
                   if ( !emptyWord && !indiscard )

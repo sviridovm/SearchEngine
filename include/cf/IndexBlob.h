@@ -6,8 +6,6 @@
 // IndexBlob, a serialization of a HashTable into one contiguous
 // block of memory, possibly memory-mapped to a HashFile.
 
-// Nicole Hamilton  nham@umich.edu
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -19,13 +17,15 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#include "../../index/index.h"
 
+#include <vector>
+#include <string>
+
+using std::vector;
+using std::string;
+
+#include <index/index.h>
 #include <cf/HashTable.h>
-#include <cf/searchstring.h>
-#include <cf/vec.h>
-
-
 
 
 class Index;
@@ -74,7 +74,7 @@ struct SerialString
       static void Write( char *buffer, const string *str ) {
             SerialString* t = reinterpret_cast<SerialString*>(buffer);
             for ( size_t i = 0; i < str->size(); i++ )
-               t->data[i] = *(str->at(i));
+               t->data[i] = (str->at(i));
             t->data[str->size()] = '\0';
          }
 

@@ -1,12 +1,14 @@
 //index.cpp
 
-#include "index.h"
-#include <cf/IndexBlob.h>
-#include <ctype.h>
+#include "index/index.h"
+#include "cf/IndexBlob.h"
+#include "cf/Utf8.h"
+#include "frontier/ReaderWriterLock.h"
+#include <filesystem>
 
 ReaderWriterLock chunk_lock;
 
-const SerialTuple *IndexReadHandler::Find(const char * key_in) {
+const SerialTuple *IndexReadHandler::Find(const char* key_in) {
    if (fcntl(fd, F_GETFD) == -1)
       return nullptr;
    const SerialTuple *tup = blob->Find(key_in, filesize);
@@ -19,7 +21,7 @@ const SerialString *IndexReadHandler::getDocument( const size_t &index_in ) {
 }  
 
 // Read entire index from memory mapped file
-int IndexReadHandler::ReadIndex(const char * fname) {
+int IndexReadHandler::ReadIndex(const char* fname) {
    // Open the file for reading, map it, check the header,
    // and note the blob address.
    fd = open(fname, O_RDONLY);
@@ -99,19 +101,19 @@ void IndexHandler::UpdateIH() {
 }
 
 IndexHandler::IndexHandler( const char * foldername ) {
-   int result;
    folder = foldername;
    UpdateIH();
 }
 
-void lowerize(string &i) {
-   char * p = i.c_str();
-   for ( ; *p; ++p) *p = tolower(*p);
+void lowerize(std::string &str) {
+   for (char &c : str) {
+      c = std::tolower(static_cast<unsigned char>(c));
+   }
 }
 
 void Index::addDocument(HtmlParser &parser) {
-   Tuple<string, PostingList> *seek;
-   string concat;
+   Tuple<std::string, PostingList> *seek;
+   std::string concat;
    /*stem(parser.bodyWords);
    stem(parser.headWords);
    stem(parser.titleWords);*/

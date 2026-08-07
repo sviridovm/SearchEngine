@@ -1,7 +1,10 @@
-#include "URLReceiver.h"
+#include "distrib/URLReceiver.h"
+#include "frontier/frontier.h"
+#include <vector>
+#include <string>
 
-
-#include "../frontier/frontier.h"
+using std::vector;
+using std::string;
 
 string UrlReceiver::parseUrls(const char *buffer) {
 

@@ -1,6 +1,7 @@
-#include "tokenstream.h"
-#include "tokentype.h"
+#include "queryCompiler/tokenstream.h"
+#include "queryCompiler/tokentype.h"
 #include <iostream>
+#include <string>
 
 static inline bool reserved(char c)
     {
@@ -10,8 +11,7 @@ static inline bool reserved(char c)
 QueryToken* TokenStream::TakeToken( ) 
     {
     TokenType type = ReadTokenType();
-    char* test = input;
-   switch (type)
+    switch (type)
         {
         case T_EOF:
             currentToken = new TokenEOF();
@@ -72,6 +72,9 @@ QueryToken* TokenStream::TakeToken( )
             currentTokenString = t;
             //std::cout << "Found token: " << t << std::endl;
             return token;
+        case T_INVALID:
+            std::cerr << "Invalid token found" << std::endl;
+            return nullptr;
         }
     return nullptr;
     }

@@ -1,5 +1,7 @@
-#include "tcpserver.h"
+#include "cf/server/tcpserver.h"
 #include <iostream>
+
+using std::string;
 
 
 TCPServer::TCPServer() {
@@ -8,6 +10,9 @@ TCPServer::TCPServer() {
 }
 
 void TCPServer::createServer(const std::string& ip, uint16_t port) {
+    this->ip = ip;
+    this->port = port;
+
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1) {
         std::cerr << "Failed to create socket" << std::endl;

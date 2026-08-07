@@ -1,7 +1,6 @@
-#include "isrHandler.h"
-#include "isr.h"
-#include <cf/IndexBlob.h>
-#include <cstddef>
+#include "isr/isrHandler.h"
+#include "isr/isr.h"
+#include "cf/IndexBlob.h"
 
 void ISRHandler::SetIndexReadHandlerPtr( IndexReadHandler *iRead ) 
    {
@@ -36,7 +35,7 @@ void ISRHandler::CloseISREndDoc( ISREndDoc *isrEndDoc )
    isrEndDoc = nullptr;
    }
 
-ISRWord *ISRHandler::OpenISRWord( char *word )
+ISRWord *ISRHandler::OpenISRWord( const char * word )
    {
    ISRWord *isrWord = new ISRWord;
 

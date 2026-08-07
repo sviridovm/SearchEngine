@@ -1,7 +1,8 @@
 #pragma once
 
-#include "isr.h"
-#include "../index/index.h"
+#include "isr/isr.h"
+#include "index/index.h"
+
 
 class ISRHandler {
 
@@ -16,7 +17,7 @@ public:
    void CloseISR( ISR *isr );
 
    // open ISRWord
-   ISRWord *OpenISRWord( char *word );
+   ISRWord *OpenISRWord( const char *word );
    // void CloseISRWord( ISRWord *isrWord );
 
    ISROr *OpenISROr(ISR **terms, unsigned int NumberOfTerms);

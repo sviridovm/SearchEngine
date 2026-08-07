@@ -1,9 +1,10 @@
 #pragma once
 
-#include "tokenstream.h"
-#include "../isr/isrHandler.h"
-#include "../isr/isr.h"
-#include "stopwords.h"
+
+#include "queryCompiler/tokenstream.h"
+#include "isr/isrHandler.h"
+#include "isr/isr.h"
+
 class QueryParser
 {
 public:

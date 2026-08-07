@@ -1,5 +1,6 @@
 #pragma once
-#include <cf/searchstring.h>
+#include <string>
+
 
 enum TokenType {
     T_INVALID = -1,
@@ -18,7 +19,7 @@ class QueryToken {
     virtual TokenType GetType() const {
         return T_INVALID;
     }
-    virtual string GetValue() const
+    virtual std::string GetValue() const
         {
         return "";
         }
@@ -28,13 +29,13 @@ class QueryToken {
 
 class QueryTokenWord : public QueryToken {
     private:
-    string word;
+    std::string word;
     public:
-    QueryTokenWord(string val) : word(val) {}
+    QueryTokenWord(std::string val) : word(val) {}
     TokenType GetType() const override {
         return TokenType::T_WORD;
     }   
-    string GetValue() const override {
+    std::string GetValue() const override {
         return word;
     }
 };

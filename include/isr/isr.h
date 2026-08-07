@@ -1,9 +1,8 @@
 #pragma once
-#include "../index/index.h"
-#include <cf/IndexBlob.h>
+#include "index/index.h"
+#include "cf/IndexBlob.h"
 
 class ISREndDoc;
-
 
 
 class ISR
@@ -91,7 +90,7 @@ class ISROr : public ISR
 public:
    ~ISROr() {
       std::cout << "or destructor\n";
-      for (int i = 0; i < NumberOfTerms; i ++) {
+      for (size_t i = 0; i < NumberOfTerms; i ++) {
          if (Terms[i] != nullptr)
             delete Terms[i];
       }
@@ -120,7 +119,7 @@ class ISRAnd : public ISR
 public:
    ~ISRAnd() {
       std::cout << "and destructor\n";
-      for (int i = 0; i < NumberOfTerms; i ++) {
+      for (size_t i = 0; i < NumberOfTerms; i ++) {
          if (Terms[i] != nullptr)
             delete Terms[i];
       }
@@ -146,7 +145,7 @@ class ISRPhrase : public ISR
 public:
    ~ISRPhrase(){
       std::cout << "phrase destructor\n";
-      for (int i = 0; i < NumberOfTerms; i ++) {
+      for (size_t i = 0; i < NumberOfTerms; i ++) {
          if (Terms[i] != nullptr)
             delete Terms[i];
       }
@@ -175,11 +174,11 @@ public:
    // ISRContainer( unsigned int countContained, unsigned int countExcluded );  // TODO: think about init
    ~ISRContainer( ) {
       std::cout << "container destructor\n";
-      for (int i = 0; i < CountContained; i ++) {
+      for (size_t i = 0; i < CountContained; i ++) {
          if (Contained[i] != nullptr)
             delete Contained[i];
       }
-      for (int i = 0; i < CountExcluded; i ++) {
+      for (size_t i = 0; i < CountExcluded; i ++) {
          if (Excluded[i] != nullptr)
             delete Excluded[i];
       }

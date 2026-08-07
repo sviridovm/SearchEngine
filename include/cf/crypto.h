@@ -1,10 +1,12 @@
 #pragma once
 
+#include <cstring>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
+#include <stdexcept>
 #include <utility>
 #include <cassert>
-#include "../frontier/ReaderWriterLock.h"
+#include "frontier/ReaderWriterLock.h"
 #include <string>
 
 
