@@ -1,7 +1,11 @@
 // HtmlTags.h
 
 #pragma once
+#include <array>
 #include <cstddef>
+#include <optional>
+#include <string>
+#include <vector>
 
 // This header defines an alpha sorted array of the HTML tags recognized
 // along with the desired action.  The list of possible names is taken from
@@ -21,7 +25,7 @@
 // <!--, <title>, <a>, <base> and <embed> are special-cased.
 
 enum class DesiredAction
-   {
+{
    OrdinaryText,
    Title,
    Comment,
@@ -32,7 +36,7 @@ enum class DesiredAction
    Embed,
    Head,
    HTML
-   };
+};
 
 // name points to beginning of the possible HTML tag name.
 // nameEnd points to one past last character.
@@ -42,22 +46,41 @@ enum class DesiredAction
 // the corresponding action.
 // If the name is not found, return OrdinaryText.
 
-DesiredAction LookupPossibleTag( const char *name, const char *nameEnd = nullptr );
+// DesiredAction LookupPossibleTag( const char *name, const char *nameEnd = nullptr );
 
-class HtmlTag
-   {
-   public:
-      const char *Tag;
-      const DesiredAction Action;
+struct HtmlAttribute {
+    std::string_view name;
+    std::string_view value;
+};
 
-      HtmlTag( const char *tag, const DesiredAction action ) :
-            Tag( tag ), Action( action )
-         {
-         }
-   };
+// struct HtmlTag {
+//    //  std::string_view name;
+//     std::vector<HtmlAttribute> attributes;
+
+//     bool closing = false;
+//     bool self_closing = false;
+
+//     [[nodiscard]]
+//     std::optional<std::string_view>
+//     attribute(std::string_view name) const;
+// };
 
 
-const HtmlTag TagsRecognized[ ] =
+DesiredAction LookupPossibleTag(std::string_view tag);
+
+struct HtmlTag
+{
+public:
+   const char *Tag;
+   const DesiredAction Action;
+
+   HtmlTag( const char *tag, const DesiredAction action ) :
+         Tag( tag ), Action( action )
+      {
+      }
+};
+
+constexpr auto TagsRecognized = std::to_array<std::pair<std::string_view, DesiredAction>>( 
    {
    { "!--",          DesiredAction::Comment },
    { "!doctype",     DesiredAction::Discard },
@@ -215,7 +238,7 @@ const HtmlTag TagsRecognized[ ] =
    { "video",        DesiredAction::Discard },
    { "wbr",          DesiredAction::Discard },
    { "xmp",          DesiredAction::Discard }
-   };
+});
 
 const size_t LongestTagLength = 10;
 const int NumberOfTags = sizeof( TagsRecognized )/sizeof( HtmlTag );

@@ -2,6 +2,7 @@
 
 #include "isr/isr.h"
 #include "index/index.h"
+#include <memory>
 
 
 class ISRHandler {
@@ -11,8 +12,8 @@ public:
    void SetIndexReadHandlerPtr(IndexReadHandler *iRead);
 
    // open ISREndDoc
-   ISREndDoc *OpenISREndDoc( );
-   void CloseISREndDoc( ISREndDoc *isrEndDoc );
+   std::unique_ptr<ISREndDoc> OpenISREndDoc( );
+   void CloseISREndDoc( std::unique_ptr<ISREndDoc> isrEndDoc );
 
    void CloseISR( ISR *isr );
 

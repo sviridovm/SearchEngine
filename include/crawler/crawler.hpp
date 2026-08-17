@@ -6,7 +6,7 @@ class Crawler {
 
 public:
 
-    Crawler();
+    Crawler() = default;
 
     HttpResponse crawl(
         const ParsedUrl& url

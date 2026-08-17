@@ -1,13 +1,13 @@
 #pragma once
 
+#include <algorithm>
 #include <string>
-#include <unordered_set>
 #include <array>
 
 class StopWords {
 private:
     // Compile-time array of stopwords
-    static constexpr auto stopwords_array = std::to_array<std::string_view>({
+    static constexpr auto stopwords_array = std::to_array<std::string>({
         "i", "me", "my", "myself", "we", "our", "ours", "ourselves",
         "you", "your", "yours", "yourself", "yourselves", "he", "him", "his",
         "himself", "she", "her", "hers", "herself", "it", "its", "itself",
@@ -24,14 +24,10 @@ private:
         "not", "only", "own", "same", "so", "than", "too", "very", "s", "t",
         "can", "will", "just", "don", "should", "now"
     });
-
-    // Compile-time generated unordered_set
-    static const std::unordered_set<std::string> stopwords;
-
+        
 public:
-    // Check if a word is a stopword
-    static bool isStopword(const std::string& word);
-    
-    // Get the stopwords set
-    static const std::unordered_set<std::string>& getStopwords();
+
+    static constexpr bool isStopWord(std::string_view word) {
+        return std::ranges::binary_search(stopwords_array, word);
+    }
 };

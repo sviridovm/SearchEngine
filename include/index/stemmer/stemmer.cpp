@@ -1,6 +1,13 @@
 //stemmer.cpp
 //stems words
 #include "stemmer.h"
+#include <iostream>
+#include <string>
+#include "utf8proc/utf8proc.h"
+
+using std::string;
+using std::vector;
+
 
 static inline bool isNum(const char c) 
     {
@@ -12,11 +19,10 @@ static inline bool isLowerAlpha(const char c)
     }
 
 static inline bool isVowel(const string& word, size_t i)
-    {
-    if (i < 0)
-        return false;
-    if ( word[i] == 'a' || word[i] == 'o' 
-    || word[i] == 'e' || word[i] == 'i' || word[i] == 'u')
+{
+    
+
+    if ( word[i] == 'a' || word[i] == 'o'     || word[i] == 'e' || word[i] == 'i' || word[i] == 'u')
         return true;
     if (word[i] == 'y') {
         if ( isVowel( word, i - 1 ) )
@@ -25,13 +31,13 @@ static inline bool isVowel(const string& word, size_t i)
             return true;
     }
     return false;
-    }
+}
 
 static inline bool doubleConsonant(const string& word)
     {
     if (word.size() < 2)
         return false;
-    int end = word.size() - 1;
+    size_t end = word.size() - 1;
     if( word[end] == word[end - 1] && isVowel( word, end - 1 ) && isVowel( word, end ) )
         return true;
     else
@@ -42,7 +48,8 @@ static inline bool oCheck(const string& word)
     {
     if (word.size() < 3)
         return false;
-        int end = word.size() - 1;
+
+    size_t end = word.size() - 1;
     char last = word[end];
     if ( last == 'x' || last == 'y' || last == 'w' )
         return false;
@@ -52,19 +59,32 @@ static inline bool oCheck(const string& word)
         return false;
     }
 
+
+size_t findFirstVowel(const string& word)
+{
+    for (size_t i = 0; i < word.size(); ) {
+        if (isVowel(word, i))
+        {
+            return i;
+        }
+    }
+
+    return string::npos;
+}
+
+
 size_t countM (const string& word)
-    {
-    int size = word.size();
+{
     int m = 0;
     bool v;
-    int i = 0;
+    
     //find first vowel
-    do
-        v = isVowel(word, i++);
-    while (!v && i < size);
-    if (i == size)
+    if (size_t firstVowel = findFirstVowel(word); firstVowel == string::npos)
+    {
         return 0;
-    for (int i; i < size; i++)
+    }
+
+    for (size_t i = 0; i < word.size(); i++)
         {
         bool t = isVowel(word, i);
         //start of new sequence VC
@@ -76,7 +96,7 @@ size_t countM (const string& word)
     if ( !v )
         m++;
     return m;
-    }
+}
 
 //counts M without the suffix (denoted by size)
 static inline int countMSubstr(const string& word, size_t suffix)
@@ -104,8 +124,9 @@ string standardize (const string& word)
         free(result);
         return word;
         }
-    string newWord(result_len);
-    for (int i = 0; i < result_len; i++)
+    string newWord;
+    newWord.reserve(result_len);
+    for (size_t i = 0; i < result_len; i++)
         if ( isNum( result[i] ) || isLowerAlpha( result[i] ) )
             newWord.push_back(result[i]);
     free(result);
@@ -119,7 +140,12 @@ static inline void step1a (string& word)
     if ( word.substr(-1) != (string)"s" )
         return;
     if (word.substr(-4) == (string)"sses")
-        word.popBack(2);
+    {
+        // pop back twice
+        word.pop_back();
+        word.pop_back();
+    }
+
     else if ( word.substr(-3) == (string)"ies" )
         word.popBack(2);
     else if ( word.substr(-2) != (string)"ss" ) //word end guaranteed to be s from above
@@ -127,8 +153,8 @@ static inline void step1a (string& word)
     }
 
 static inline void cont1b (string& word, size_t m)
-    {
-    int end = word.size() - 1;
+{
+    size_t end = word.size() - 1;
     if ( word.substr(-2) == (string)"at" )
         word.push_back('e');
     else if ( word.substr(-2) == (string)"bl" )
@@ -137,16 +163,16 @@ static inline void cont1b (string& word, size_t m)
         word.push_back('e');
     else if ( doubleConsonant(word) && 
         ( word[end] != 'l' && word[end] != 's' && word[end] != 'z' ) )
-        word.popBack();
+        word.pop_back();
     else if ( m == 1 && oCheck(word) )
         word.push_back('e');
-    }
+}
 
 static inline void step1b (string& word, size_t m)
     {
     if (m > 0 && word.substr(-3) == (string)"eed")
         {
-        word.popBack();
+        word.pop_back();
         return;
         }
     bool containsVowel = false;
@@ -186,7 +212,7 @@ static inline void step2 (string& word)
     {
     //if else if statement hell
     //could map it but uh I'm lazy
-    int size = word.size();
+    size_t size = word.size();
     if ( size < 3 )
         return;
     if (size > 7 && countMSubstr(word, 7) )
@@ -420,8 +446,8 @@ static inline void step5b(string& word)
     }
 
 //algorithm from Algorithm for Suffix Stripping by M.F. Porter
-void stem (string s) 
-    {
+void stem (string& s) 
+{
     s = standardize(s);
     step1a(s);
     size_t m = countM(s);
@@ -437,17 +463,18 @@ void stem (string s)
     step5a(s);
     if (m > 1)
         step5b(s);
-    }
+}
 
-void stem ( vector<string> v )
-    {
+void stem ( vector<string>& v )
+{
     for ( string& s : v)
         stem( s );
-    }
+}
 
-string stemWord(string s)
-    {
-    string temp = s;
+string stemWord(const string& s)
+{
+    // copy s
+    auto temp = string(s);
     stem(temp);
     return temp;
-    }
+}

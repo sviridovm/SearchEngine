@@ -1,43 +1,51 @@
 #pragma once
 #include "index/index.h"
 #include "cf/IndexBlob.h"
+#include <memory>
 
 class ISREndDoc;
 
 
-class ISR
-{
+class ISR {
 public:
-   virtual ~ISR() {std::cout << "isr destructor\n";}
+   virtual ~ISR();
    virtual const SerialPost *Next() = 0; // -> 
    virtual const SerialPost *NextDocument() = 0; // -> return 
    virtual const SerialPost *Seek(Location target) = 0; // -> return delta
 
-   Location GetStartLocation(); // -> return start
-   Location GetEndLocation(); // -> return end
-   size_t GetMatchingDoc(); // return result
+   Location GetStartLocation() const; // -> return start
+   Location GetEndLocation() const; // -> return end
+   size_t GetMatchingDoc() const; // return result
 
-   unsigned GetDocumentCount();
-   unsigned GetNumberOfOccurrences();
+   unsigned GetDocumentCount() const;
+   unsigned GetNumberOfOccurrences() const;
 
-   const SerialPost *GetCurrentPost();
+   const SerialPost *GetCurrentPost() const;
    void SetCurrentPost(const SerialPost *p);
    void SetPostingList( const SerialPostingList *pl );
 
-   ISREndDoc *EndDoc;
+   
+   protected:
+      Location getStart() const;
+      Location getEnd() const;
 
-protected:
-   const SerialPostingList *postingList; 
-   const SerialPost *curr; // current post 
-   Location start = 0, end = 0;
+      void setStart(Location start);
+      void setEnd(Location end);
 
-   size_t matchingDocument; // final result
+
+   private:
+      const SerialPostingList *postingList; 
+      const SerialPost *curr; // current post 
+      Location start = 0;
+      Location end = 0;
+      
+      std::unique_ptr<ISREndDoc> _EndDoc;
+      size_t matchingDocument; // final result
 };
 
 class ISREndDoc
 {
 public:
-   ~ISREndDoc() {std::cout << "enddoc destructor\n";}
    const SerialPost *Seek(Location target); // -> return delta
    const SerialPost *NextDocument(); // -> return 
    const SerialPost *Next();
@@ -60,10 +68,13 @@ public:
    void SetPostingList( const SerialPostingList *pl );
 
 private:
-   size_t documentLength = 0, titleLength = 0, urlLength = 0;
+   size_t documentLength = 0;
+   size_t titleLength = 0;
+   size_t urlLength = 0;
    const SerialPostingList *postingList; 
    const SerialPost *curr; // current post 
-   Location start = 0, end = 0;
+   Location start = 0;
+   Location end = 0;
    size_t matchingDocument;
 
 };
@@ -72,14 +83,10 @@ private:
 class ISRWord : public ISR
 {
 public:
-   ~ISRWord() {
-      std::cout << "word destructor\n";
-      delete EndDoc;
-   }
-
-   const SerialPost *Next(); // -> 
-   const SerialPost *NextDocument(); // -> return 
-   const SerialPost *Seek(Location target); // -> return delta
+   ~ISRWord() override;
+   const SerialPost *Next() override; // -> 
+   const SerialPost *NextDocument() override; // -> return 
+   const SerialPost *Seek(Location target) override; // -> return delta
 
 };
 
@@ -104,14 +111,15 @@ public:
    Location GetStartLocation();
    Location GetEndLocation();
 
-   const SerialPost *Seek(Location target);
-   const SerialPost *Next();
-   const SerialPost *NextDocument();
+   const SerialPost *Seek(Location target) override;
+   const SerialPost *Next() override;
+   const SerialPost *NextDocument() override;
 
 
 private:
    unsigned nearestTerm = 0;
-   Location nearestStartLocation, nearestEndLocation;
+   Location nearestStartLocation;
+   Location nearestEndLocation;
 };
 
 class ISRAnd : public ISR
@@ -131,13 +139,15 @@ public:
    ISR **Terms;
    unsigned int NumberOfTerms;
 
-   const SerialPost *Seek(Location target);
-   const SerialPost *Next();
-   const SerialPost *NextDocument();
+   const SerialPost *Seek(Location target) override;
+   const SerialPost *Next() override;
+   const SerialPost *NextDocument() override;
 
 private:
-   unsigned int nearestTerm = 0, farthestTerm = 0;
-   Location nearestStartLocation, farthestStartLocation;
+   unsigned int nearestTerm = 0;
+   unsigned int farthestTerm = 0;
+   Location nearestStartLocation;
+   Location farthestStartLocation;
 };
 
 class ISRPhrase : public ISR
@@ -157,13 +167,15 @@ public:
    ISR **Terms;
    unsigned int NumberOfTerms;
 
-   const SerialPost *Seek(Location target);
-   const SerialPost *Next();
-   const SerialPost *NextDocument();
+   const SerialPost *Seek(Location target) override;
+   const SerialPost *Next() override;
+   const SerialPost *NextDocument() override;
 
 private:
-   unsigned nearestTerm, farthestTerm;
-   Location nearestStartLocation, nearestEndLocation;
+   unsigned int nearestTerm;
+   unsigned int farthestTerm;
+   Location nearestStartLocation;
+   Location nearestEndLocation;
 };
 
 
@@ -207,11 +219,13 @@ class Dictionary
 public:
    ISR *OpenIsr(char *token);
    // The first line of index.txt, in order
-   size_t GetNumberOfWords();
-   size_t GetNumberOfUniqueWords(); // number of posting list
-   size_t GetNumberOfDocuments();
+   size_t GetNumberOfWords() const;
+   size_t GetNumberOfUniqueWords() const; // number of posting list
+   size_t GetNumberOfDocuments() const;
 
 private:
-   size_t numOfWords, numOfUniqueWords, numOfDocuments;
+   size_t numOfWords;
+   size_t numOfUniqueWords;
+   size_t numOfDocuments;
    size_t SetNum(size_t numOfWords, size_t numOfUniqueWords, size_t numOfDocuments);
 };

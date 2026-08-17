@@ -1,6 +1,7 @@
 #include "isr/isrHandler.h"
 #include "isr/isr.h"
 #include "cf/IndexBlob.h"
+#include <memory>
 
 void ISRHandler::SetIndexReadHandlerPtr( IndexReadHandler *iRead ) 
    {
@@ -8,9 +9,9 @@ void ISRHandler::SetIndexReadHandlerPtr( IndexReadHandler *iRead )
    }
 
 
-ISREndDoc *ISRHandler::OpenISREndDoc(  )
-   {
-   ISREndDoc *endDoc = new ISREndDoc;
+std::unique_ptr<ISREndDoc> ISRHandler::OpenISREndDoc(  )
+{
+   auto endDoc = std::make_unique<ISREndDoc>();
 
    const SerialTuple *tuple = indexRead->Find("%");
 
@@ -26,18 +27,17 @@ ISREndDoc *ISRHandler::OpenISREndDoc(  )
 
    return endDoc;
 
-   }
+}
 
 
-void ISRHandler::CloseISREndDoc( ISREndDoc *isrEndDoc )
+void ISRHandler::CloseISREndDoc( std::unique_ptr<ISREndDoc> isrEndDoc )
+{
+   isrEndDoc.reset();
+}
+
+std::unique_ptr<ISRWord> ISRHandler::OpenISRWord( const char * word )
    {
-   delete isrEndDoc;
-   isrEndDoc = nullptr;
-   }
-
-ISRWord *ISRHandler::OpenISRWord( const char * word )
-   {
-   ISRWord *isrWord = new ISRWord;
+   auto isrWord = std::make_unique<ISRWord>();
 
    const SerialTuple *tuple = indexRead->Find(word);
 

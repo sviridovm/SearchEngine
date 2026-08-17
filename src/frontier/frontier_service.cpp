@@ -1,10 +1,15 @@
 #include "frontier_service/frontier_service.hpp"
+#include <cstdint>
+#include <sys/types.h>
 
 grpc::Status FrontierService::GetURLs(
     grpc::ServerContext* context,
     const frontier::URLRequest* request,
     frontier::URLResponse* response
 ) {
+
+    (void)context;
+
     int count = request->count();
 
     while (count-- > 0 && !urlQueue.empty()) {
@@ -21,7 +26,10 @@ grpc::Status FrontierService::SubmitURLs(
     const frontier::URLBatch* request,
     frontier::SubmitResponse* response
 ) {
-    int accepted = 0;
+    (void)context;
+
+
+    uint32_t accepted = 0;
 
     for (const auto& url : request->urls()) {
         if (seenURLs.insert(url).second) {

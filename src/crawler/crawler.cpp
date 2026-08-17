@@ -1,10 +1,5 @@
 #include "crawler/crawler.hpp"
 
-
-Crawler::Crawler()
-    : client()
-{}
-
 HttpResponse Crawler::crawl(
     const ParsedUrl& url
 )

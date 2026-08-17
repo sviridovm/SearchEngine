@@ -3,6 +3,8 @@
 
 
 #include <cstdint>
+#include <filesystem>
+#include <memory>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -45,8 +47,8 @@ enum class Style {
     Bold        //represented by 10
 };
 
-typedef size_t Location; // Location 0 is the null location.
-typedef size_t FileOffset;
+using Location = size_t; // Location 0 is the null location.
+using FileOffset = size_t;
 
 class Post {
 private:
@@ -57,7 +59,7 @@ private:
     //n bits to encode the EOF + n bits to encode an index to the corresponding URL for EOF tokens
    uint8_t *data;
 
-   int get_bytes(const uint8_t first_byte) const {
+   int get_bytes(uint8_t first_byte) const {
       uint8_t bytes = 0;
       uint8_t sentinel = 7;
       if (!(first_byte >> sentinel)) // ASCII
@@ -71,11 +73,9 @@ private:
    }
 public:
    
-   Post() {
-      data = nullptr;
-   }
+   Post() = delete;
 
-   Post(const uint8_t * data_in) {
+   explicit Post(const uint8_t * data_in) {
       int bytes = get_bytes(data_in[0]);
       data = new uint8_t[bytes];
       std::memcpy(data, data_in, bytes);
@@ -138,9 +138,9 @@ class PostingList {
 
 public:
     //virtual Post *Seek( Location );
-    void appendDelta(size_t &WordsInIndex, size_t &doc);
+    void appendDelta(size_t WordsInIndex, size_t doc);
 
-    void appendURLDelta(size_t &WordsInIndex, size_t &doc, bool owner);
+    void appendURLDelta(size_t WordsInIndex, size_t doc, bool owner);
 
    //Construct empty posting list for string str_in
    PostingList(Token type_in) : type(type_in) {}
@@ -223,17 +223,17 @@ public:
    }
 
    // reserve n post space in list
-   void setUseCount(const size_t n) {
+   void setUseCount(size_t n) {
       list.reserve(n);
    }
 
    // set row i of seek table
-   void setSeekTable(const size_t & i, const std::pair<size_t, size_t> & pair) {
-      SeekTable[i] = pair;
+   void setSeekTable(size_t index, const std::pair<size_t, size_t> & pair) {
+      SeekTable[index] = pair;
    }
 
    // set seek index
-   void setSeekIndex(const size_t & seek){
+   void setSeekIndex(uint8_t seek){
       seekIndex = seek;
    }
 
@@ -286,14 +286,10 @@ class Index {
 public:
 
     // addDocument should take in parsed HTML and add it to the index.
-   void addDocument(HtmlParser &parser);
-   size_t WordsInIndex = 0, 
-   DocumentsInIndex = 0;
-
-   std::vector<std::string> documents;
+   void addDocument(const HtmlParser &parser);
    
-
-   Index() {}
+   
+   Index() = default;
 
    const std::vector<std::string> *getDocuments() const {
       return &documents;
@@ -315,38 +311,42 @@ public:
 private:
 
    HashTable<std::string, PostingList> dict;
+   size_t WordsInIndex = 0;
+   size_t DocumentsInIndex = 0;
 
-   static constexpr auto titleMarker = std::string_view("@");
-   static constexpr auto headMarker = std::string_view("<");
-   static constexpr auto anchorMarker = std::string_view("$");
-   static constexpr auto selfRefUrlMarker = std::string_view("#1");
-   static constexpr auto otherRefUrlMarker = std::string_view("#0");
-   static constexpr auto selfUrlMarker = std::string_view("##");
-   static constexpr auto eodMarker = std::string_view("%");
+   std::vector<std::string> documents;
+   
+   static constexpr auto titleMarker = std::string("@");
+   static constexpr auto headMarker = std::string("<");
+   static constexpr auto anchorMarker = std::string("$");
+   static constexpr auto selfRefUrlMarker = std::string("#1");
+   static constexpr auto otherRefUrlMarker = std::string("#0");
+   static constexpr auto selfUrlMarker = std::string("##");
+   static constexpr auto eodMarker = std::string("%");
 
 
 };
 
 // IndexHandler
 
-class IndexHandler {
+class IndexHandler
+{
 public:
 
-   Index *index = nullptr;
-   IndexHandler() {};
-   IndexHandler( const char * foldername );
+   IndexHandler() = default;
+   explicit IndexHandler( const char * foldername );
    void UpdateIH();
 
-   std::string &getFilename() {
+   virtual ~IndexHandler() = default;
+
+   const std::string &getFilename() const {
       return fileString;
-   }
+}
 
-   virtual ~IndexHandler() {
-      
-   }
 
-protected:
+private:
    ReaderWriterLock rw_lock;
+   std::unique_ptr<Index> index;
 
    std::string fileString;
    int chunkID;
@@ -365,9 +365,10 @@ class IndexWriteHandler : public IndexHandler
 {
 public:
    IndexWriteHandler() = delete;
-   IndexWriteHandler( const char * foldername ) : IndexHandler( foldername ) {  }
+   explicit IndexWriteHandler( std::filesystem::path filename );
+   //  : IndexHandler( foldername ) {  }
 
-   int addDocument(HtmlParser &parser) {
+   int addDocument(const HtmlParser &parser) {
       int ret = 0;
       index->addDocument(parser);
       // TODO: better evaluation of size?
@@ -393,8 +394,8 @@ private:
 class IndexReadHandler : public IndexHandler 
 {
 public:
-   IndexReadHandler() {}
-   IndexReadHandler( const char * filename ) : IndexHandler( filename ) {  }
+   IndexReadHandler() = default;
+   explicit IndexReadHandler( const char * filename ) : IndexHandler( filename ) {  }
 
    ~IndexReadHandler() override {
       close(fd);
@@ -417,7 +418,7 @@ public:
    void TestIndex();
 
 private:
-   size_t filesize;
+   ssize_t filesize;
    void* mapped_memory;
    IndexBlob* blob;
 };

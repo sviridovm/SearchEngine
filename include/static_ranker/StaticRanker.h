@@ -51,7 +51,7 @@ class StaticRanker {
     //     : urlLengthWeight(urlLengthWeight), domainWeight(domainWeight) {}
     
     static float rank(const ParsedUrl& url) {
-        if (url.urlName.empty()) return 0.0f;
+        if (url.base_url.empty()) return 0.0f;
         
         float rankScore = 0.0f;
         // rankScore += urlLengthWeight * url.urlName.length(); // Length of the URL

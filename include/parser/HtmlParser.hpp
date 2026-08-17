@@ -1,8 +1,9 @@
 #pragma once
 
-#include "cf/ParsedUrl.hpp"
 #include <string>
 #include <vector>
+
+#include "parser/html_tokenizer.hpp"
 
 
 // This is a simple HTML parser class.  Given a text buffer containing
@@ -67,38 +68,43 @@
 
 
 class Link
-   {
-   public:
-      std::string URL;
-      std::vector< std::string > anchorText;
+{
+public:
+   std::string URL;
+   std::vector< std::string > anchorText;
+   Link() = delete;
 
-      Link() = default;
+   explicit Link( std::string URL );
+};
 
-      Link( std::string URL ) : URL( URL )
-         {
-         }
-   };
 
+struct ParserState {
+         bool inTitle = false;  
+         bool indiscard = false;  
+         bool inAnchor = false;
+         bool inHead = false;
+         bool inItalic = false;
+         bool inBold = false;
+         bool pastHtml = false;
+}; 
 
 class HtmlParser
-   {
+{
    public:
-      std::vector< std::string > bodyWords, titleWords, headWords;
-      std::vector< Link > links;
-      std::string base;
-      ParsedUrl pURL;
-      size_t count = 0;
-
-      // The constructor is given a buffer and length containing
-      // presumed HTML.  It will parse the buffer, stripping out
-      // all the HTML tags and producing the list of words in body,
-      // words in title, and links found on the page.
-      HtmlParser(const char *buffer, const size_t length);
-
+      explicit HtmlParser(std::string_view html);
+      
       // Special constructor for robots.txt
-      HtmlParser(const char *buffer, const size_t length, const std::string &basename );
+      explicit HtmlParser(std::string_view html, const std::string &basename );
+      
+      HtmlParser () = delete;
 
-      HtmlParser () {};
+      void parse();
+
+      [[nodiscard]] const std::vector<std::string> &getBodyWords() const { return words; }
+      [[nodiscard]] const std::vector<std::string> &getTitleWords() const { return titleWords; }
+      [[nodiscard]] const std::vector<std::string> &getHeadWords() const { return headWords; }
+      [[nodiscard]] const std::vector<Link> &getLinks() const { return links; }
+      [[nodiscard]] const std::string &getBase() const { return base; }
       
    private:
       void appendWord(const std::string &word, std::vector< std::string > &vec, bool append);
@@ -106,4 +112,16 @@ class HtmlParser
       bool appendLink(const Link &link);
       std::string complete_link(std::string link, std::string base_url);
       
-   };
+      ParserState state_;
+      HtmlTokenizer tokenizer_;
+      std::vector<std::string> words;
+      std::vector<std::string> titleWords;
+      std::vector<std::string> headWords;
+   
+      std::vector<Link> links;
+      std::string base;
+      size_t count = 0;
+   
+      void  make_lowercase(std::string &str);
+
+};

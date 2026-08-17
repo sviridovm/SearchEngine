@@ -4,9 +4,16 @@
 #include "cf/IndexBlob.h"
 #include "cf/Utf8.h"
 #include "frontier/ReaderWriterLock.h"
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
+#include <vector>
 
 ReaderWriterLock chunk_lock;
+
+
+using std::string;
+using std::vector;
 
 const SerialTuple *IndexReadHandler::Find(const char* key_in) {
    if (fcntl(fd, F_GETFD) == -1)
@@ -60,7 +67,6 @@ void IndexWriteHandler::WriteIndex() {
 }
 
 string nextChunk( const char * foldername, int &chunkID ) {
-   char * out;
    chunkID= -1;
    for (const auto& entry : std::filesystem::directory_iterator(foldername)) {
       int currID = atoi(entry.path().filename().c_str());
@@ -105,45 +111,49 @@ IndexHandler::IndexHandler( const char * foldername ) {
    UpdateIH();
 }
 
-void lowerize(std::string &str) {
-   for (char &c : str) {
-      c = std::tolower(static_cast<unsigned char>(c));
-   }
+void  make_lowercase(std::string &str) {
+   std::ranges::for_each(str, ::tolower);
 }
 
-void Index::addDocument(HtmlParser &parser) {
+
+void Index::addDocument(const HtmlParser &parser) {
    Tuple<std::string, PostingList> *seek;
    std::string concat;
    /*stem(parser.bodyWords);
    stem(parser.headWords);
    stem(parser.titleWords);*/
-   int n = 0;
-   for (auto &i : parser.bodyWords) {
-      lowerize(i);
-      seek = dict.Find(i, PostingList(Token::Body));
+   for (const auto &body_word : parser.getBodyWords()) {
+      auto temp(body_word);
+      make_lowercase(temp);
+      seek = dict.Find(temp, PostingList(Token::Body));
       seek->value.appendDelta(WordsInIndex, DocumentsInIndex);
    }
-   for (auto &i : parser.headWords) {
-      lowerize(i);
-      concat = headMarker + i;
-      seek = dict.Find(concat, PostingList(Token::Body));
-      seek->value.appendDelta(WordsInIndex, DocumentsInIndex);
-   }
-   for (auto &i : parser.titleWords) {
-      lowerize(i);
-      concat = titleMarker + i;
-      seek = dict.Find(concat, PostingList(Token::Title));
-      seek->value.appendDelta(WordsInIndex, DocumentsInIndex);
 
+   for (const auto &head_word : parser.getHeadWords()) {
+      auto temp(head_word);
+      make_lowercase(temp);
+      seek = dict.Find(temp, PostingList(Token::Body));
+      seek->value.appendDelta(WordsInIndex, DocumentsInIndex);
    }
-   for (auto &i : parser.links) {
+
+   for (const auto &title_word : parser.getTitleWords()) {
+      auto temp(title_word);
+      make_lowercase(temp);
+      concat = titleMarker + title_word;
+
+      seek = dict.Find(temp, PostingList(Token::Title));
+      seek->value.appendDelta(WordsInIndex, DocumentsInIndex);
+   }
+
+
+   for (auto &i : parser.getLinks()) {
       for (auto &j : i.anchorText) {
-         lowerize(j);
+         make_lowercase(j);
          concat = anchorMarker + j;
          seek = dict.Find(concat, PostingList(Token::Anchor));
          seek->value.appendDelta(WordsInIndex, DocumentsInIndex);
       }    
-      if (parser.pURL.Host == i.URL.substr(parser.pURL.Service.length() + 3, parser.pURL.Host.length()))
+      if (parser.parsedURL.getHost() == i.URL.substr(parser.parsedURL.getService().length() + 3, parser.parsedURL.getHost().length()))
          concat = selfRefUrlMarker + i.URL;
       else
          concat = otherRefUrlMarker + i.URL;
@@ -155,32 +165,34 @@ void Index::addDocument(HtmlParser &parser) {
    seek->value.appendDelta(WordsInIndex, DocumentsInIndex);
 
 
-   concat = selfUrlMarker + parser.base;
+   concat = selfUrlMarker + parser.getBase();
    seek = dict.Find(concat, PostingList(Token::URL));
    seek->value.appendDelta(WordsInIndex, DocumentsInIndex);
    
    DocumentsInIndex += 1;
-   documents.push_back(parser.base);
+   documents.push_back(parser.getBase());
 }
 
 //for utillity
-uint8_t bitsNeeded(const size_t n) {
-    if (n == 0) {
-        return 1; 
-    }
-    return std::max(1, static_cast<int>(std::ceil(std::log2(n + 1))));
-}
+// uint8_t bitsNeeded(size_t n) {
+//     if (n == 0) {
+//         return 1; 
+//     }
+//     return std::max(1, static_cast<int>(std::ceil(std::log2(n + 1))));
+// }
 
-uint8_t *formatUtf8(const size_t &delta) {
+std::vector<uint8_t> formatUtf8(size_t delta) {
    size_t size = SizeOfCustomUtf8(delta);
-   uint8_t *deltaUtf8 = new uint8_t[size];
-   WriteCustomUtf8(deltaUtf8, delta, size);
+   // uint8_t *deltaUtf8 = new uint8_t[size];
+   vector<uint8_t> deltaUtf8(size);
+   
+   WriteCustomUtf8(deltaUtf8.data(), delta, size);
    assert(deltaUtf8[0] != 0xfe);
    
    return deltaUtf8;
 }
 
-void PostingList::appendDelta(size_t &WordsInIndex, size_t &doc) {
+void PostingList::appendDelta(size_t WordsInIndex, size_t doc) {
    size_t delta = Delta(WordsInIndex, doc);
    list.emplace_back(formatUtf8(delta)); // TODO: memory leak?
    UpdateSeek(list.size()-1, WordsInIndex);

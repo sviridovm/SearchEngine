@@ -1,5 +1,9 @@
-#include "shingle.h"
+#include "index/shingles/shingle.hpp"
 #include <cstring>
+
+
+using std::vector;
+using std::string;
 
 //FNV hash for a vector of strings
 //shingles SHINGLE_SIZE words starting at index start
@@ -97,10 +101,10 @@ void ShingleMap::sign(const vector<size_t> &shingles, char* signature)
     #else
     */
     // if AVX2 is not supported, use a fallback implementation
-    for (int i = 0; i < shingles.size(); i++) 
-        for (int j = 0; j < SIGNATURE_SIZE; j++) 
+    for (size_t i = 0; i < shingles.size(); i++) 
+        for (size_t j = 0; j < SIGNATURE_SIZE; j++) 
             {
-            size_t hash = (a[j] * shingles[i] + b[j]) % p;
+            int hash = (a[j] * shingles[i] + b[j]) % p;
             if (hash < signature[j]) 
                 signature[j] = hash;
             }
